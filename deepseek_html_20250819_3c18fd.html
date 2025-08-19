@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedro Loups Garous - تسجيل الدخول</title>
+    
+    <!-- تحسين SEO -->
+    <meta name="description" content="لعبة Pedro Loups Garous الاجتماعية - العب مع أصدقائك عبر الإنترنت واستمتع بتجربة المستذئبين الرائعة!">
+    <meta name="keywords" content="Pedro Loups Garous, لعبة مستذئبين, العب مع الأصدقاء, لعبة جماعية, لعبة عربية">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --error-color: #ff6b6b;
+            --success-color: #4CAF50;
+        }
+        
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.6;
+        }
+        
+        .container {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--success-color);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Tajawal', sans-serif;
+            margin-top: 0.5rem;
+        }
+        
+        button:hover {
+            background: #3d8b40;
+            transform: translateY(-2px);
+        }
+        
+        .error {
+            color: var(--error-color);
+            margin-top: 0.3rem;
+            font-size: 0.8rem;
+            display: none;
+        }
+        
+        .switch-form {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .switch-form a {
+            color: var(--success-color);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logo {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            background: linear-gradient(to right, #f6d365, #fda085);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Pedro Loups Garous</div>
+        
+        <div id="auth-container">
+            <div id="login-form">
+                <h1>تسجيل الدخول</h1>
+                <div class="form-group">
+                    <label for="login-username">اسم المستخدم</label>
+                    <input type="text" id="login-username" placeholder="أدخل اسم المستخدم">
+                    <div class="error" id="login-username-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">كلمة المرور</label>
+                    <input type="password" id="login-password" placeholder="أدخل كلمة المرور">
+                    <div class="error" id="login-password-error"></div>
+                </div>
+                <button id="login-btn">تسجيل الدخول</button>
+                <div class="switch-form">
+                    ليس لديك حساب؟ <a id="show-register">سجل الآن</a>
+                </div>
+            </div>
+            
+            <div id="register-form" style="display: none;">
+                <h1>إنشاء حساب</h1>
+                <div class="form-group">
+                    <label for="register-username">اسم المستخدم</label>
+                    <input type="text" id="register-username" placeholder="اختر اسم مستخدم فريد">
+                    <div class="error" id="register-username-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">كلمة المرور</label>
+                    <input type="password" id="register-password" placeholder="كلمة المرور (6 أحرف على الأقل)">
+                    <div class="error" id="register-password-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">تأكيد كلمة المرور</label>
+                    <input type="password" id="confirm-password" placeholder="أعد إدخال كلمة المرور">
+                    <div class="error" id="confirm-password-error"></div>
+                </div>
+                <button id="register-btn">إنشاء حساب</button>
+                <div class="switch-form">
+                    لديك حساب بالفعل؟ <a id="show-login">تسجيل الدخول</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration - استبدل بمعلومات مشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyYOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // عناصر واجهة المستخدم
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+
+        // تبديل بين نموذج التسجيل/الدخول
+        showRegister.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            registerForm.style.display = 'block';
+            hideAllErrors();
+        });
+
+        showLogin.addEventListener('click', () => {
+            registerForm.style.display = 'none';
+            loginForm.style.display = 'block';
+            hideAllErrors();
+        });
+
+        // تسجيل الدخول
+        loginBtn.addEventListener('click', loginUser);
+
+        // إنشاء حساب جديد
+        registerBtn.addEventListener('click', registerUser);
+
+        // السماح بالدخول باستخدام Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                if (loginForm.style.display !== 'none') {
+                    loginUser();
+                } else {
+                    registerUser();
+                }
+            }
+        });
+
+        async function loginUser() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            hideAllErrors();
+            
+            // التحقق من الصحة
+            if (!username) {
+                showError('login-username-error', 'يجب إدخال اسم المستخدم');
+                return;
+            }
+            
+            if (!password) {
+                showError('login-password-error', 'يجب إدخال كلمة المرور');
+                return;
+            }
+            
+            try {
+                // البحث عن المستخدم في قاعدة البيانات
+                const snapshot = await database.ref('users').orderByChild('username').equalTo(username).once('value');
+                
+                if (snapshot.exists()) {
+                    const userData = Object.values(snapshot.val())[0];
+                    const email = userData.email;
+                    
+                    // تسجيل الدخول باستخدام Firebase Auth
+                    await auth.signInWithEmailAndPassword(email, password);
+                    
+                    // توجيه إلى صفحة اللعبة
+                    window.location.href = "game.html";
+                } else {
+                    showError('login-username-error', 'اسم المستخدم غير مسجل');
+                }
+            } catch (error) {
+                handleAuthError(error, 'login');
+            }
+        }
+
+        async function registerUser() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            hideAllErrors();
+            
+            // التحقق من الصحة
+            if (!username) {
+                showError('register-username-error', 'يجب إدخال اسم مستخدم');
+                return;
+            }
+            
+            if (username.length < 3) {
+                showError('register-username-error', 'يجب أن يكون اسم المستخدم 3 أحرف على الأقل');
+                return;
+            }
+            
+            if (!password) {
+                showError('register-password-error', 'يجب إدخال كلمة مرور');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('register-password-error', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('confirm-password-error', 'كلمة المرور غير متطابقة');
+                return;
+            }
+            
+            try {
+                // التحقق من أن اسم المستخدم غير مستخدم
+                const snapshot = await database.ref('users').orderByChild('username').equalTo(username).once('value');
+                
+                if (snapshot.exists()) {
+                    showError('register-username-error', 'اسم المستخدم مستخدم بالفعل');
+                } else {
+                    // إنشاء حساب Firebase Auth
+                    const email = `${username.replace(/\s+/g, '')}@pedroloups.com`;
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    // حفظ بيانات المستخدم في قاعدة البيانات
+                    await database.ref('users/' + user.uid).set({
+                        username: username,
+                        email: email,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    alert('تم إنشاء الحساب بنجاح!');
+                    window.location.href = "game.html";
+                }
+            } catch (error) {
+                handleAuthError(error, 'register');
+            }
+        }
+
+        // وظائف مساعدة
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideAllErrors() {
+            document.querySelectorAll('.error').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+
+        function handleAuthError(error, formType) {
+            console.error('Auth Error:', error);
+            
+            switch(error.code) {
+                case 'auth/email-already-in-use':
+                    showError(`${formType}-username-error`, 'اسم المستخدم مستخدم بالفعل');
+                    break;
+                case 'auth/invalid-email':
+                    showError(`${formType}-username-error`, 'اسم مستخدم غير صالح');
+                    break;
+                case 'auth/weak-password':
+                    showError(`${formType}-password-error`, 'كلمة المرور ضعيفة جداً');
+                    break;
+                case 'auth/wrong-password':
+                    showError('login-password-error', 'كلمة المرور غير صحيحة');
+                    break;
+                case 'auth/user-not-found':
+                    showError('login-username-error', 'اسم المستخدم غير مسجل');
+                    break;
+                default:
+                    alert('حدث خطأ: ' + error.message);
+            }
+        }
+
+        // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // إذا كان المستخدم مسجل الدخول، توجيه إلى صفحة اللعبة
+                window.location.href = "game.html";
+            }
+        });
+    </script>
+</body>
+</html>
